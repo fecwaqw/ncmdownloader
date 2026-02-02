@@ -15,7 +15,43 @@ const path = require("node:path");
 const ProgressBar = require("progress");
 const { ID3Writer } = require("browser-id3-writer");
 const pLimit = require("p-limit").default;
-const config = yaml.load(fs.readFileSync("config.yml", "utf-8"));
+const defaultConfigContent = `maxBitrateLevel: "exhigh"
+#maxBitrateLevel:下载歌曲的最高质量，不填写内容默认为可下载的最高质量
+#可填内容:
+# higher => 较高
+# exhigh=>极高
+# lossless=>无损
+# hires=>Hi-Res
+# jyeffect => 高清环绕声
+# sky => 沉浸环绕声
+# dolby => 杜比全景声
+# jymaster => 超清母带
+downloadSongs: true
+#downloadSongs:是否下载歌曲
+#可填内容:
+# true => 下载歌曲
+# false => 不下载歌曲
+downloadLyrics: true
+#downloadLyrics:是否下载歌词
+#可填内容:
+# true => 下载歌词
+# false => 不下载歌词
+concurrency: 3
+#concurrency:同时下载的任务数
+#可填内容:正整数(不建议设置太大)
+retry: 3
+#retry:下载失败时的重试次数
+#可填内容:正整数
+retryDelay: 1000
+#retryDelay:下载失败时的重试间隔时间
+#可填内容:正整数(单位：毫秒)
+timeout: 30000
+#timeout:下载超时时间
+#可填内容:正整数(单位：毫秒)
+cookie: ""
+#cookie:网易云音乐的cookie
+#可填内容:字符串(网易云音乐的cookie,一般包含"MUSIC_U=xxxx")
+`;
 function replaceSpecialCharacter(s) {
     const specialChars = ["/", ":", "*", "?", '"', "<", ">", "|", "\\"];
     specialChars.forEach((e) => {
@@ -56,6 +92,17 @@ function createDownloadDirectory(path) {
     fs.mkdirSync(path, { recursive: true });
 }
 async function main() {
+    if (!fs.existsSync("config.yml")) {
+        fs.writeFileSync("config.yml", defaultConfigContent);
+    }
+    try {
+        var config = yaml.load(fs.readFileSync("config.yml", "utf-8"));
+    } catch (e) {
+        console.log(
+            "读取config.yml错误！可以删除config.yml再运行此程序以重新生成config.yml",
+        );
+        return;
+    }
     try {
         checkConfig(config);
     } catch (e) {
