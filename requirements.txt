@@ -1,3 +1,0 @@
-pyncm
-eyed3
-tqdm
