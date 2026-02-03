@@ -10,6 +10,7 @@ function question(query) {
     );
 }
 const { download, downloadBuffer, downloadLyric } = require("./download.js");
+const { truncateFilename } = require("./filename.js");
 const fs = require("fs");
 const path = require("node:path");
 const ProgressBar = require("progress");
@@ -52,13 +53,6 @@ cookie: ""
 #cookie:网易云音乐的cookie
 #可填内容:字符串(网易云音乐的cookie,一般包含"MUSIC_U=xxxx")
 `;
-function replaceSpecialCharacter(s) {
-    const specialChars = ["/", ":", "*", "?", '"', "<", ">", "|", "\\"];
-    specialChars.forEach((e) => {
-        s = s.replaceAll(e, "");
-    });
-    return s;
-}
 function checkConfig(config) {
     const songQuality = [
         "standard",
@@ -124,7 +118,7 @@ async function main() {
         return;
     }
     const playlistName = data.name;
-    const downloadPath = path.resolve(replaceSpecialCharacter(playlistName));
+    const downloadPath = path.resolve(truncateFilename(playlistName));
     createDownloadDirectory(downloadPath);
     console.log(`正在下载歌单 ${playlistName}`);
     const songDetails = (
@@ -159,7 +153,7 @@ async function main() {
     const limit = pLimit(config.concurrency);
     const downloadSong = (song) =>
         limit(async () => {
-            const songFileBaseName = replaceSpecialCharacter(
+            const songFileBaseName = truncateFilename(
                 `${song.name}${song.translatedName ? `(${song.translatedName})` : ""} - ${song.artists.join(", ")}`,
             );
             if (config.downloadSongs) {
